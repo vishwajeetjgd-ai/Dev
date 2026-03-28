@@ -1,0 +1,32 @@
+# System files
+.DS_Store
+.CFUserTextEncoding
+.Trash/
+
+# Personal directories - exclude everything except canteen-app
+Applications/
+Desktop/
+Documents/
+Downloads/
+Library/
+Movies/
+Music/
+Pictures/
+Public/
+
+# Config files
+.claude.json
+.claude/
+.config/
+.copilot/
+.npm/
+.vscode/
+.zsh_history
+.zsh_sessions/
+
+# Node
+node_modules/
+.env
+
+# Build output
+dist/
