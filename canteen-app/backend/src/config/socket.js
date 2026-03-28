@@ -7,7 +7,9 @@ let io;
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(',')
+        : ['http://localhost:5173'],
       methods: ['GET', 'POST'],
     },
   });
@@ -47,9 +49,10 @@ const initSocket = (httpServer) => {
   return io;
 };
 
-// Get the Socket.IO instance (returns null on Vercel serverless where Socket.IO isn't available)
+// Get the Socket.IO instance
 const getIO = () => {
-  return io || null;
+  if (!io) throw new Error('Socket.IO not initialized');
+  return io;
 };
 
 module.exports = { initSocket, getIO };

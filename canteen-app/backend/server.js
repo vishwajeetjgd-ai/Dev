@@ -3,7 +3,9 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const morgan = require('morgan');
+const cron = require('node-cron');
 const connectDB = require('./src/config/db');
+const { initSocket } = require('./src/config/socket');
 const errorMiddleware = require('./src/middlewares/error.middleware');
 const { seedAdmin } = require('./src/seeds/adminSeed');
 const { seedMenu } = require('./src/seeds/menuSeed');
@@ -18,39 +20,21 @@ const tokenRoutes = require('./src/routes/token.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 
 const app = express();
+const server = http.createServer(app);
 
-// Global middlewares
+// Initialize Socket.IO
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
   : ['http://localhost:5173'];
 
+initSocket(server);
+
+// Global middlewares
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// DB connection (cached for serverless - connects once per cold start)
-let isConnected = false;
-const ensureDBConnected = async () => {
-  if (!isConnected) {
-    await connectDB();
-    await seedAdmin();
-    await seedMenu();
-    await sweepExpiredOrders();
-    isConnected = true;
-  }
-};
-
-// For Vercel serverless: ensure DB is connected before handling requests
-app.use(async (req, res, next) => {
-  try {
-    await ensureDBConnected();
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// API Routes (registered after DB middleware)
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
@@ -66,33 +50,23 @@ app.get('/api/health', (req, res) => {
 // Global error handler (must be last middleware)
 app.use(errorMiddleware);
 
-const isVercel = process.env.VERCEL === '1';
+const PORT = process.env.PORT || 5000;
 
-if (!isVercel) {
-  // Local development: use Socket.IO and cron jobs
-  const { initSocket } = require('./src/config/socket');
-  const cron = require('node-cron');
+// Connect to DB, seed data, start cron jobs, then listen
+connectDB().then(async () => {
+  // Seed admin user and sample menu items
+  await seedAdmin();
+  await seedMenu();
 
-  const server = http.createServer(app);
-  initSocket(server);
+  // Run initial sweep for any orders that expired while server was down
+  await sweepExpiredOrders();
 
-  const PORT = process.env.PORT || 5000;
-
-  connectDB().then(async () => {
-    await seedAdmin();
-    await seedMenu();
+  // Cron job: sweep expired pending orders every 5 minutes (safety net)
+  cron.schedule('*/5 * * * *', async () => {
     await sweepExpiredOrders();
-    isConnected = true;
-
-    cron.schedule('*/5 * * * *', async () => {
-      await sweepExpiredOrders();
-    });
-
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-    });
   });
-}
 
-// Export for Vercel serverless
-module.exports = app;
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  });
+});

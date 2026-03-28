@@ -80,10 +80,10 @@ const placeOrder = asyncHandler(async (req, res) => {
   // Schedule auto-cancel timer
   scheduleAutoCancel(order._id);
 
-  // Notify admin via Socket.IO (no-op on serverless)
+  // Notify admin via Socket.IO
   try {
     const io = getIO();
-    if (io) io.to('admin').emit('order:new', {
+    io.to('admin').emit('order:new', {
       orderId: order._id,
       tokenNumber: order.tokenNumber,
       items: order.items,
@@ -169,7 +169,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
   // Notify via Socket.IO
   try {
     const io = getIO();
-    if (io) io.to('admin').emit('order:statusUpdate', {
+    io.to('admin').emit('order:statusUpdate', {
       orderId: order._id,
       tokenNumber: order.tokenNumber,
       status: 'Cancelled',
@@ -211,7 +211,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   // Notify user via Socket.IO
   try {
     const io = getIO();
-    if (io) io.to(`user:${order.user}`).to('admin').emit('order:statusUpdate', {
+    io.to(`user:${order.user}`).to('admin').emit('order:statusUpdate', {
       orderId: order._id,
       tokenNumber: order.tokenNumber,
       status: order.status,

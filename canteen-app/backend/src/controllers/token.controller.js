@@ -15,7 +15,7 @@ const advanceToken = asyncHandler(async (req, res) => {
   // Broadcast token update to all connected clients
   try {
     const io = getIO();
-    if (io) io.emit('token:update', {
+    io.emit('token:update', {
       currentServing: counter.currentServing,
       totalTokens: counter.lastTokenNumber,
     });
