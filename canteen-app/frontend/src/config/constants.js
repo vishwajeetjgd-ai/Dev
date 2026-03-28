@@ -1,8 +1,8 @@
-// API base URL - proxied through Vite in dev
-export const API_BASE_URL = '/api';
+// API base URL - uses env var in production, proxied through Vite in dev
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-// Socket URL - connects to same origin in dev
-export const SOCKET_URL = 'http://localhost:5000';
+// Socket URL - not available on Vercel serverless
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 // User roles
 export const ROLES = {

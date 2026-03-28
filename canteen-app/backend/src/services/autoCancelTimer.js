@@ -27,7 +27,7 @@ const scheduleAutoCancel = (orderId, delayMs) => {
       // Notify via Socket.IO
       try {
         const io = getIO();
-        io.to(`user:${order.user}`).to('admin').emit('order:autoCancelled', {
+        if (io) io.to(`user:${order.user}`).to('admin').emit('order:autoCancelled', {
           orderId: order._id,
           tokenNumber: order.tokenNumber,
           reason: order.cancelReason,
@@ -72,7 +72,7 @@ const sweepExpiredOrders = async () => {
 
       try {
         const io = getIO();
-        io.to(`user:${order.user}`).to('admin').emit('order:autoCancelled', {
+        if (io) io.to(`user:${order.user}`).to('admin').emit('order:autoCancelled', {
           orderId: order._id,
           tokenNumber: order.tokenNumber,
           reason: order.cancelReason,

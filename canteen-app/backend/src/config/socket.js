@@ -47,12 +47,9 @@ const initSocket = (httpServer) => {
   return io;
 };
 
-// Get the Socket.IO instance (call after initSocket)
+// Get the Socket.IO instance (returns null on Vercel serverless where Socket.IO isn't available)
 const getIO = () => {
-  if (!io) {
-    throw new Error('Socket.IO not initialized');
-  }
-  return io;
+  return io || null;
 };
 
 module.exports = { initSocket, getIO };
