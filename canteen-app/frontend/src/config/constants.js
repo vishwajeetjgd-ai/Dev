@@ -1,7 +1,7 @@
 // API base URL - uses env var in production, proxied through Vite in dev
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-// Socket URL - not available on Vercel serverless
+// Socket URL - Render backend supports WebSockets
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 // User roles
