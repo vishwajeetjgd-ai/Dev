@@ -3,18 +3,18 @@ const User = require('../models/User');
 // Seed admin user on startup (idempotent - skips if admin exists)
 const seedAdmin = async () => {
   try {
-    const adminExists = await User.findOne({ role: 'admin' });
-    if (adminExists) {
-      console.log('Admin user already exists, skipping seed');
-      return;
-    }
+    const email = process.env.ADMIN_EMAIL || 'admin@canteen.com';
+    const password = process.env.ADMIN_PASSWORD || 'Admin@123';
+
+    // Delete existing admin and re-create to ensure password is hashed correctly
+    await User.deleteOne({ email, role: 'admin' });
 
     await User.create({
       name: 'Canteen Admin',
-      email: process.env.ADMIN_EMAIL || 'admin@canteen.com',
-      password: process.env.ADMIN_PASSWORD || 'Admin@123',
+      email,
+      password,
       role: 'admin',
-      welcomeCouponAssigned: true, // admin doesn't get welcome coupon
+      welcomeCouponAssigned: true,
     });
 
     console.log('Admin user seeded successfully');
